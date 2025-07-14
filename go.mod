@@ -1,4 +1,4 @@
-module colors
+module github.com/Thompson6626/twcolors
 
 go 1.24
 
