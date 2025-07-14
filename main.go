@@ -41,10 +41,10 @@ var (
 	}
 )
 
-var familyOrder = []string{
-	"RED", "ORANGE", "AMBER", "YELLOW", "LIME", "GREEN", "EMERALD",
-	"TEAL", "CYAN", "SKY", "BLUE", "INDIGO", "VIOLET", "PURPLE",
-	"FUCHSIA", "PINK", "ROSE", "SLATE", "GRAY", "ZINC", "NEUTRAL", "STONE",
+var familyOrder = []ColorName{
+	ColorRed, ColorOrange, ColorAmber, ColorYellow, ColorLime, ColorGreen, ColorEmerald,
+	ColorTeal, ColorCyan, ColorSky, ColorBlue, ColorIndigo, ColorViolet, ColorPurple,
+	ColorFuchsia, ColorPink, ColorRose, ColorSlate, ColorGray, ColorZinc, ColorNeutral, ColorStone,
 }
 
 var shadeLevels = []int{50, 100, 200, 300, 400, 500, 600, 700, 800, 900, 950}
@@ -52,7 +52,7 @@ var shadeLevels = []int{50, 100, 200, 300, 400, 500, 600, 700, 800, 900, 950}
 var blends = gamut.Blends(lipgloss.Color("#00C9FF"), lipgloss.Color("#92FE9D"), 50)
 
 type Color struct {
-	Family string
+	Family ColorName
 	Shade  int
 	Hex    lipgloss.Color
 }
@@ -65,7 +65,7 @@ type Model struct {
 	buffer           string
 	boxStyle         lipgloss.Style
 	hideLabels       bool
-	currentFormat    ColorType
+	currentFormat    ColorFormat
 }
 
 func main() {
@@ -181,7 +181,7 @@ func (m *Model) handleKey(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 		}
 	case "enter":
 		color := m.getColor(m.cursorX, m.cursorY)
-		colorValue := Palette[color.Family][color.Shade][m.currentFormat]
+		colorValue := Palette[color.Family][color.Shade].GetByFormat(m.currentFormat)
 		clipboard.Write(clipboard.FmtText, []byte(colorValue))
 		m.clipboard = fmt.Sprintf("%s", colorValue)
 		m.clipboardTime = time.Now()
@@ -223,7 +223,7 @@ func (m Model) getColor(x, y int) Color {
 	return Color{
 		Family: familyOrder[x],
 		Shade:  shadeLevels[y],
-		Hex:    lipgloss.Color(Palette[familyOrder[x]][shadeLevels[y]][HEX]),
+		Hex:    lipgloss.Color(Palette[familyOrder[x]][shadeLevels[y]].Hex),
 	}
 }
 
@@ -236,7 +236,7 @@ func (m Model) View() string {
 			color := Color{
 				Family: family,
 				Shade:  shade,
-				Hex:    lipgloss.Color(Palette[family][shade][HEX]),
+				Hex:    lipgloss.Color(Palette[family][shade].Hex),
 			}
 			selected := m.cursorX == x && m.cursorY == y
 			row = append(row, renderBox(color, selected, y, x, m.boxStyle, m.hideLabels))
@@ -324,7 +324,7 @@ func rainbow(base lipgloss.Style, s string, colors []color.Color) string {
 	return str
 }
 
-func formatName(ct ColorType) string {
+func formatName(ct ColorFormat) string {
 	switch ct {
 	case HEX:
 		return "HEX"
