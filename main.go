@@ -1,18 +1,44 @@
 package main
 
 import (
+	"context"
 	"fmt"
 	"image/color"
 	"os"
+	"os/signal"
 	"strconv"
 	"strings"
+	"syscall"
 	"time"
 
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
 	"github.com/lucasb-eyer/go-colorful"
 	"github.com/muesli/gamut"
+	"github.com/spf13/cobra"
 	"golang.design/x/clipboard"
+)
+
+var (
+	Version = "1"
+
+	rootCmd = &cobra.Command{
+		Use:     "twcolors",
+		Short:   "Explore and copy Tailwind CSS colors in your terminal",
+		Long:    `A TUI for browsing the Tailwind CSS color palette and copying HEX or OKLCH values.`,
+		Version: Version,
+		RunE: func(cmd *cobra.Command, args []string) error {
+			if err := clipboard.Init(); err != nil {
+				return fmt.Errorf("failed to initialize clipboard: %w", err)
+			}
+
+			p := tea.NewProgram(initialModel(), tea.WithAltScreen())
+			if _, err := p.Run(); err != nil {
+				return fmt.Errorf("TUI error: %w", err)
+			}
+			return nil
+		},
+	}
 )
 
 var familyOrder = []string{
@@ -43,13 +69,14 @@ type Model struct {
 }
 
 func main() {
-	if err := clipboard.Init(); err != nil {
-		panic(err)
-	}
+	ctx, cancel := signal.NotifyContext(
+		context.Background(),
+		os.Interrupt, syscall.SIGTERM,
+	)
+	defer cancel()
 
-	p := tea.NewProgram(initialModel(), tea.WithAltScreen())
-	if _, err := p.Run(); err != nil {
-		fmt.Println("Error:", err)
+	if err := rootCmd.ExecuteContext(ctx); err != nil {
+		fmt.Println(err)
 		os.Exit(1)
 	}
 }
