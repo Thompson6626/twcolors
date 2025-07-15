@@ -19,7 +19,7 @@ type ColorName string
 const (
 	ColorRed     ColorName = "Red"
 	ColorOrange  ColorName = "Orange"
-	ColorAmber   ColorName = "AMBER"
+	ColorAmber   ColorName = "Amber"
 	ColorYellow  ColorName = "Yellow"
 	ColorLime    ColorName = "Lime"
 	ColorGreen   ColorName = "Green"
